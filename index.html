@@ -3,208 +3,562 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>【AI時代のプログラミング思考】購入特典キャンペーン</title>
-    <link rel="stylesheet" href="style.css">
+    <title>旅の軌跡マップ</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Hiragino Kaku Gothic Pro", "メイリオ", Meiryo, sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        #map {
+            width: 100%;
+            height: 100vh;
+        }
+
+        /* オーバーレイパネル */
+        .overlay-panel {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 10px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+            padding: 14px;
+            max-width: 320px;
+            width: calc(100vw - 20px);
+            font-size: 14px;
+        }
+
+        .overlay-panel h1 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .toggle-btn {
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            color: #666;
+            padding: 0 4px;
+        }
+
+        .panel-body {
+            overflow: hidden;
+            transition: max-height 0.3s ease, opacity 0.3s ease;
+            max-height: 500px;
+            opacity: 1;
+        }
+
+        .panel-body.collapsed {
+            max-height: 0;
+            opacity: 0;
+        }
+
+        .input-group {
+            margin-bottom: 8px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 2px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .input-group input:focus {
+            border-color: #4285f4;
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 8px 6px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.1s;
+            min-width: 0;
+        }
+
+        .btn:active {
+            transform: scale(0.97);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: #4285f4;
+            color: #fff;
+        }
+
+        .btn-success {
+            background: #34a853;
+            color: #fff;
+        }
+
+        .btn-route {
+            background: #ea4335;
+            color: #fff;
+        }
+
+        .btn-all {
+            background: #ff6d00;
+            color: #fff;
+        }
+
+        .mode-btns {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+
+        .mode-btns .btn {
+            flex: 1;
+            padding: 8px 4px;
+            font-size: 12px;
+            border: 2px solid transparent;
+        }
+
+        .mode-btns .btn.active {
+            border-color: #333;
+            box-shadow: 0 0 0 1px #333;
+        }
+
+        .info-text {
+            font-size: 12px;
+            color: #555;
+            margin-top: 4px;
+            min-height: 18px;
+        }
+
+        .info-text.error {
+            color: #ea4335;
+        }
+
+        .info-text.success {
+            color: #34a853;
+        }
+
+        /* ローディング */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 6px 0;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #ddd;
+            border-top-color: #4285f4;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* レスポンシブ */
+        @media (max-width: 400px) {
+            .overlay-panel {
+                max-width: none;
+                width: calc(100vw - 20px);
+                padding: 10px;
+            }
+
+            .btn {
+                font-size: 12px;
+                padding: 7px 4px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <!-- ヘッダー -->
-    <header class="header">
-        <div class="container">
-            <div class="header-content fade-in">
-                <div class="header-text">
-                    <h1 class="campaign-title">【AI時代のプログラミング思考】<br>購入特典キャンペーン</h1>
-                    <p class="catch-copy">今だけ！書籍購入で限定特典PDFプレゼント</p>
-                    <p class="campaign-period">キャンペーン期間：2025年1月1日〜2025年3月31日</p>
+    <div id="map"></div>
+
+    <div class="overlay-panel">
+        <h1>
+            旅の軌跡マップ
+            <button class="toggle-btn" onclick="togglePanel()" title="パネルを開閉">▼</button>
+        </h1>
+        <div class="panel-body" id="panelBody">
+            <!-- モード切り替え -->
+            <div class="mode-btns">
+                <button class="btn btn-route active" id="btnToday" onclick="switchMode('today')">今日のルート</button>
+                <button class="btn btn-all" id="btnAll" onclick="switchMode('all')">全体の軌跡</button>
+            </div>
+
+            <!-- 入力欄 -->
+            <div id="inputArea">
+                <div class="input-group">
+                    <label>A地点（出発地）</label>
+                    <input type="text" id="inputFrom" placeholder="例：大阪駅">
                 </div>
-                <div class="header-image">
-                    <img src="https://via.placeholder.com/300x400/2c5aa0/ffffff?text=Book+Cover" alt="書籍表紙">
+                <div class="input-group">
+                    <label>B地点（目的地）</label>
+                    <input type="text" id="inputTo" placeholder="例：明石駅">
+                </div>
+                <div class="btn-row">
+                    <button class="btn btn-primary" id="btnShowRoute" onclick="showRoute()">ルートを表示</button>
+                    <button class="btn btn-success" id="btnSave" onclick="saveRoute()" disabled>記録する</button>
                 </div>
             </div>
-        </div>
-    </header>
 
-    <!-- 特典内容セクション -->
-    <section class="benefits-section">
-        <div class="container">
-            <h2 class="section-title fade-in">豪華特典内容</h2>
-            <p class="section-subtitle fade-in">通常では手に入らない限定コンテンツを無料でプレゼント！</p>
-
-            <div class="benefits-grid">
-                <div class="benefit-card fade-in">
-                    <div class="benefit-icon">📚</div>
-                    <h3 class="benefit-title">特典1: 実践ワークブック</h3>
-                    <p class="benefit-description">書籍の内容を実践できる50ページのワークブック。チェックリストや演習問題付きで、すぐに使える実践的な内容です。</p>
-                </div>
-
-                <div class="benefit-card fade-in">
-                    <div class="benefit-icon">🎯</div>
-                    <h3 class="benefit-title">特典2: ケーススタディ集</h3>
-                    <p class="benefit-description">実際の企業での導入事例を10パターン収録。成功の秘訣と失敗から学ぶポイントを詳しく解説しています。</p>
-                </div>
-
-                <div class="benefit-card fade-in">
-                    <div class="benefit-icon">💡</div>
-                    <h3 class="benefit-title">特典3: チートシート集</h3>
-                    <p class="benefit-description">重要ポイントを一目で確認できるチートシート。デスクに貼っていつでも参照できる便利な資料です。</p>
-                </div>
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <span style="font-size:12px; margin-left:6px;">読み込み中...</span>
             </div>
+
+            <div class="info-text" id="infoText"></div>
         </div>
-    </section>
+    </div>
 
-    <!-- 申請方法セクション -->
-    <section class="steps-section">
-        <div class="container">
-            <h2 class="section-title fade-in">特典の受け取り方</h2>
-            <p class="section-subtitle fade-in">簡単3ステップで特典PDFをお届けします</p>
+    <script src="config.js"></script>
+    <script>
+        // ====================
+        // グローバル変数
+        // ====================
+        let map;
+        let directionsService;
+        let directionsRenderer;
+        let currentRoute = null;       // 現在表示中のルート情報
+        let allPolylines = [];         // 全体の軌跡用polyline配列
+        let currentMode = 'today';     // 'today' or 'all'
 
-            <div class="steps-container">
-                <div class="step fade-in">
-                    <div class="step-number">1</div>
-                    <div class="step-icon">🛒</div>
-                    <h3 class="step-title">対象書店で書籍を購入</h3>
-                    <p class="step-description">下記の対象書店から書籍をご購入ください。購入証明（レシート・注文確認メールなど）を保管してください。</p>
-                </div>
+        // ====================
+        // 地図初期化
+        // ====================
+        function initMap() {
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: { lat: 35.6812, lng: 139.7671 }, // 東京駅
+                zoom: 6,
+                mapTypeControl: false,
+                streetViewControl: false,
+                fullscreenControl: false,
+                zoomControlOptions: {
+                    position: google.maps.ControlPosition.RIGHT_CENTER
+                }
+            });
 
-                <div class="step fade-in">
-                    <div class="step-number">2</div>
-                    <div class="step-icon">📱</div>
-                    <h3 class="step-title">公式LINEに登録して購入証明を送信</h3>
-                    <p class="step-description">下記のQRコードから公式LINEを友だち追加し、購入証明の写真を送信してください。</p>
-                    <div class="qr-code">
-                        <img src="https://via.placeholder.com/200x200/2c5aa0/ffffff?text=QR+Code" alt="LINE QRコード">
-                        <p class="qr-label">公式LINE登録はこちら</p>
-                    </div>
-                </div>
+            directionsService = new google.maps.DirectionsService();
+            directionsRenderer = new google.maps.DirectionsRenderer({
+                map: map,
+                suppressMarkers: false,
+                polylineOptions: {
+                    strokeColor: '#FF0000',
+                    strokeWeight: 5,
+                    strokeOpacity: 0.8
+                }
+            });
+        }
 
-                <div class="step fade-in">
-                    <div class="step-number">3</div>
-                    <div class="step-icon">🎁</div>
-                    <h3 class="step-title">特典PDFを受け取る</h3>
-                    <p class="step-description">購入証明の確認後、LINEにて特典PDFのダウンロードリンクをお送りします（通常24時間以内）。</p>
-                </div>
-            </div>
-        </div>
-    </section>
+        // ====================
+        // パネル開閉
+        // ====================
+        function togglePanel() {
+            const body = document.getElementById('panelBody');
+            const btn = document.querySelector('.toggle-btn');
+            body.classList.toggle('collapsed');
+            btn.textContent = body.classList.contains('collapsed') ? '▶' : '▼';
+        }
 
-    <!-- 対象書店リスト -->
-    <section class="stores-section">
-        <div class="container">
-            <h2 class="section-title fade-in">対象書店</h2>
-            <p class="section-subtitle fade-in">以下の書店でご購入いただけます</p>
+        // ====================
+        // モード切り替え
+        // ====================
+        function switchMode(mode) {
+            currentMode = mode;
+            const btnToday = document.getElementById('btnToday');
+            const btnAll = document.getElementById('btnAll');
+            const inputArea = document.getElementById('inputArea');
 
-            <div class="stores-grid">
-                <a href="#" class="store-button fade-in">
-                    <span class="store-name">Amazon</span>
-                    <span class="arrow">→</span>
-                </a>
-                <a href="#" class="store-button fade-in">
-                    <span class="store-name">楽天ブックス</span>
-                    <span class="arrow">→</span>
-                </a>
-                <a href="#" class="store-button fade-in">
-                    <span class="store-name">紀伊國屋書店</span>
-                    <span class="arrow">→</span>
-                </a>
-                <a href="#" class="store-button fade-in">
-                    <span class="store-name">丸善ジュンク堂</span>
-                    <span class="arrow">→</span>
-                </a>
-                <a href="#" class="store-button fade-in">
-                    <span class="store-name">honto</span>
-                    <span class="arrow">→</span>
-                </a>
-                <a href="#" class="store-button fade-in">
-                    <span class="store-name">ヨドバシ.com</span>
-                    <span class="arrow">→</span>
-                </a>
-            </div>
-        </div>
-    </section>
+            btnToday.classList.toggle('active', mode === 'today');
+            btnAll.classList.toggle('active', mode === 'all');
 
-    <!-- 注意事項 -->
-    <section class="notes-section">
-        <div class="container">
-            <h2 class="section-title fade-in">注意事項</h2>
-            <div class="notes-content fade-in">
-                <ul class="notes-list">
-                    <li><strong>キャンペーン期間：</strong>2025年1月1日〜2025年3月31日（購入分まで）</li>
-                    <li><strong>申請期限：</strong>2025年4月10日まで（期限を過ぎると特典を受け取れません）</li>
-                    <li><strong>対象書籍：</strong>『AI時代のプログラミング思考』（新品のみ対象、中古品は対象外）</li>
-                    <li><strong>特典送付：</strong>購入証明確認後、24時間以内にLINEにてお送りします</li>
-                    <li><strong>購入証明について：</strong>レシート、注文確認メール、購入履歴のスクリーンショットなど、購入日と書籍名が確認できるもの</li>
-                    <li><strong>特典の再配布禁止：</strong>特典PDFの転載、再配布、販売は固く禁じます</li>
-                    <li><strong>お問い合わせ：</strong>ご不明な点は公式LINEまでお気軽にお問い合わせください</li>
-                </ul>
-            </div>
-        </div>
-    </section>
+            if (mode === 'today') {
+                inputArea.style.display = 'block';
+                clearAllPolylines();
+                if (currentRoute) {
+                    directionsRenderer.setMap(map);
+                }
+                setInfo('A地点とB地点を入力してルートを表示してください。');
+            } else {
+                inputArea.style.display = 'none';
+                directionsRenderer.setMap(null);
+                loadAllRoutes();
+            }
+        }
 
-    <!-- FAQ -->
-    <section class="faq-section">
-        <div class="container">
-            <h2 class="section-title fade-in">よくあるご質問</h2>
+        // ====================
+        // ルート表示
+        // ====================
+        function showRoute() {
+            const from = document.getElementById('inputFrom').value.trim();
+            const to = document.getElementById('inputTo').value.trim();
 
-            <div class="faq-list">
-                <div class="faq-item fade-in">
-                    <button class="faq-question">
-                        <span>Q1. 電子書籍版も特典の対象ですか？</span>
-                        <span class="faq-icon">+</span>
-                    </button>
-                    <div class="faq-answer">
-                        <p>はい、電子書籍版も特典の対象です。購入確認メールまたは購入履歴のスクリーンショットをお送りください。</p>
-                    </div>
-                </div>
+            if (!from || !to) {
+                setInfo('出発地と目的地を入力してください。', 'error');
+                return;
+            }
 
-                <div class="faq-item fade-in">
-                    <button class="faq-question">
-                        <span>Q2. 購入証明を紛失してしまいました</span>
-                        <span class="faq-icon">+</span>
-                    </button>
-                    <div class="faq-answer">
-                        <p>購入した書店に再発行を依頼するか、注文履歴のスクリーンショットをお送りください。購入日と書籍名が確認できれば対応可能です。</p>
-                    </div>
-                </div>
+            showLoading(true);
+            setInfo('');
+            document.getElementById('btnSave').disabled = true;
 
-                <div class="faq-item fade-in">
-                    <button class="faq-question">
-                        <span>Q3. 複数冊購入した場合、特典も複数もらえますか？</span>
-                        <span class="faq-icon">+</span>
-                    </button>
-                    <div class="faq-answer">
-                        <p>特典は1回のご購入につき1セットのみとなります。複数冊ご購入いただいても、特典の内容は同じものとなります。</p>
-                    </div>
-                </div>
+            const request = {
+                origin: from,
+                destination: to,
+                travelMode: google.maps.TravelMode.DRIVING
+            };
 
-                <div class="faq-item fade-in">
-                    <button class="faq-question">
-                        <span>Q4. 特典はいつまでダウンロードできますか？</span>
-                        <span class="faq-icon">+</span>
-                    </button>
-                    <div class="faq-answer">
-                        <p>特典PDFのダウンロードリンクは送信から90日間有効です。期限内に必ずダウンロードしてください。</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+            directionsService.route(request, function(result, status) {
+                showLoading(false);
 
-    <!-- CTA -->
-    <section class="cta-section">
-        <div class="container">
-            <div class="cta-content fade-in">
-                <h2 class="cta-title">今すぐ書籍を購入して<br>限定特典を手に入れよう！</h2>
-                <a href="#" class="cta-button">対象書店で購入する</a>
-            </div>
-        </div>
-    </section>
+                if (status === 'OK') {
+                    directionsRenderer.setMap(map);
+                    directionsRenderer.setDirections(result);
 
-    <!-- フッター -->
-    <footer class="footer">
-        <div class="container">
-            <p class="footer-text">© 2025 AI Programming Publishing. All rights reserved.</p>
-        </div>
-    </footer>
+                    const route = result.routes[0];
+                    const leg = route.legs[0];
+                    const distanceKm = (leg.distance.value / 1000).toFixed(1);
+                    const encodedPolyline = route.overview_polyline;
 
-    <script src="script.js"></script>
+                    currentRoute = {
+                        from: leg.start_address,
+                        to: leg.end_address,
+                        fromName: from,
+                        toName: to,
+                        distance: distanceKm,
+                        polyline: encodedPolyline
+                    };
+
+                    document.getElementById('btnSave').disabled = false;
+                    setInfo(from + ' → ' + to + '（' + distanceKm + ' km）', 'success');
+                } else {
+                    currentRoute = null;
+                    let msg = 'ルートが見つかりませんでした。';
+                    if (status === 'NOT_FOUND') {
+                        msg = '地点が見つかりません。地名を確認してください。';
+                    } else if (status === 'ZERO_RESULTS') {
+                        msg = 'この区間のルートが見つかりません。';
+                    }
+                    setInfo(msg, 'error');
+                }
+            });
+        }
+
+        // ====================
+        // スプレッドシートに保存
+        // ====================
+        function saveRoute() {
+            if (!currentRoute) return;
+
+            showLoading(true);
+            document.getElementById('btnSave').disabled = true;
+
+            const today = new Date();
+            const dateStr = today.getFullYear() + '/' +
+                String(today.getMonth() + 1).padStart(2, '0') + '/' +
+                String(today.getDate()).padStart(2, '0');
+
+            const rowData = [
+                dateStr,
+                currentRoute.fromName,
+                currentRoute.toName,
+                currentRoute.distance,
+                currentRoute.polyline
+            ];
+
+            const body = {
+                values: [rowData]
+            };
+
+            const url = 'https://sheets.googleapis.com/v4/spreadsheets/' +
+                CONFIG.SPREADSHEET_ID +
+                '/values/' + CONFIG.SHEET_NAME + ':append' +
+                '?valueInputOption=USER_ENTERED' +
+                '&key=' + CONFIG.SHEETS_API_KEY;
+
+            fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            })
+            .then(function(response) {
+                if (!response.ok) {
+                    throw new Error('保存に失敗しました（HTTP ' + response.status + '）');
+                }
+                return response.json();
+            })
+            .then(function() {
+                showLoading(false);
+                setInfo('記録しました！（' + currentRoute.fromName + ' → ' + currentRoute.toName + '）', 'success');
+            })
+            .catch(function(err) {
+                showLoading(false);
+                setInfo('保存エラー: ' + err.message + '。APIキーとスプレッドシートの共有設定を確認してください。', 'error');
+                document.getElementById('btnSave').disabled = false;
+            });
+        }
+
+        // ====================
+        // 全ルート読み込み・描画
+        // ====================
+        function loadAllRoutes() {
+            showLoading(true);
+            setInfo('');
+            clearAllPolylines();
+
+            const url = 'https://sheets.googleapis.com/v4/spreadsheets/' +
+                CONFIG.SPREADSHEET_ID +
+                '/values/' + CONFIG.SHEET_NAME +
+                '?key=' + CONFIG.SHEETS_API_KEY;
+
+            fetch(url)
+            .then(function(response) {
+                if (!response.ok) {
+                    throw new Error('データ取得に失敗しました（HTTP ' + response.status + '）');
+                }
+                return response.json();
+            })
+            .then(function(data) {
+                showLoading(false);
+                const rows = data.values;
+
+                if (!rows || rows.length === 0) {
+                    setInfo('記録されたルートがありません。', 'error');
+                    return;
+                }
+
+                const bounds = new google.maps.LatLngBounds();
+                let routeCount = 0;
+                let totalDistance = 0;
+
+                rows.forEach(function(row) {
+                    // row: [日付, A地点, B地点, 距離, polyline]
+                    const polylineStr = row[4];
+                    if (!polylineStr) return;
+
+                    const path = google.maps.geometry.encoding.decodePath(polylineStr);
+                    if (path.length === 0) return;
+
+                    const polyline = new google.maps.Polyline({
+                        path: path,
+                        strokeColor: '#FF0000',
+                        strokeWeight: 4,
+                        strokeOpacity: 0.7,
+                        map: map
+                    });
+
+                    allPolylines.push(polyline);
+                    path.forEach(function(point) {
+                        bounds.extend(point);
+                    });
+
+                    routeCount++;
+                    totalDistance += parseFloat(row[3]) || 0;
+                });
+
+                if (routeCount > 0) {
+                    map.fitBounds(bounds);
+                    setInfo('全 ' + routeCount + ' ルート（合計 ' + totalDistance.toFixed(1) + ' km）', 'success');
+                } else {
+                    setInfo('有効なルートデータがありません。', 'error');
+                }
+            })
+            .catch(function(err) {
+                showLoading(false);
+                setInfo('読み込みエラー: ' + err.message, 'error');
+            });
+        }
+
+        // ====================
+        // ポリライン全消去
+        // ====================
+        function clearAllPolylines() {
+            allPolylines.forEach(function(pl) {
+                pl.setMap(null);
+            });
+            allPolylines = [];
+        }
+
+        // ====================
+        // ユーティリティ
+        // ====================
+        function setInfo(msg, type) {
+            const el = document.getElementById('infoText');
+            el.textContent = msg;
+            el.className = 'info-text';
+            if (type) el.classList.add(type);
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading').classList.toggle('show', show);
+        }
+
+        // Enterキーでルート表示
+        document.addEventListener('DOMContentLoaded', function() {
+            var inputs = document.querySelectorAll('#inputFrom, #inputTo');
+            inputs.forEach(function(input) {
+                input.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') showRoute();
+                });
+            });
+        });
+    </script>
+
+    <!-- Google Maps JavaScript API (geometry ライブラリ含む) -->
+    <script>
+        // config.js のキーを使って動的にスクリプトを読み込む
+        (function() {
+            var script = document.createElement('script');
+            script.src = 'https://maps.googleapis.com/maps/api/js?key=' +
+                CONFIG.MAPS_API_KEY +
+                '&libraries=geometry&callback=initMap&language=ja';
+            script.async = true;
+            script.defer = true;
+            document.head.appendChild(script);
+        })();
+    </script>
 </body>
 </html>
