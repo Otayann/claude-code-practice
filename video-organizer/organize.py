@@ -32,7 +32,7 @@ from mutagen.mp4 import MP4
 SCOPES = ["https://www.googleapis.com/auth/drive"]
 FOLDER_ID = "1w1r3rwrp5MCQXJEKdKoo7yCdvLW1Q6U6"
 VIDEO_EXTENSIONS = (".mp4", ".mov", ".avi", ".mkv", ".mts", ".m4v")
-GEMINI_MODEL = "gemini-1.5-flash"
+GEMINI_MODEL = "gemini-2.5-flash"
 
 # API制限対策: Gemini API呼び出しごとの待機秒数（無料枠: 15 req/min → 4秒以上）
 GEMINI_SLEEP_SECONDS = 5
