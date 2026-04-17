@@ -38,6 +38,8 @@ GEMINI_MODEL = "gemini-2.5-flash-lite"
 GEMINI_SLEEP_SECONDS = 5
 # 429エラー時の最大リトライ回数
 MAX_RETRIES = 3
+# 1日の無料枠上限（これを超えるとクォータエラーになる）
+DEFAULT_DAILY_LIMIT = 20
 
 # 日付範囲ルール
 DATE_RANGES = [
@@ -512,18 +514,29 @@ def process_videos(limit=None):
 
 
 def parse_args():
-    """コマンドライン引数を解析する。"""
-    limit = None
+    """コマンドライン引数を解析する。
+
+    引数なし           → デフォルトの上限（20本）で処理
+    python organize.py 5  → 5本だけ処理
+    python organize.py all → 全件処理（上限なし）
+    """
     if len(sys.argv) > 1:
+        arg = sys.argv[1].strip().lower()
+        if arg == "all":
+            return None  # 上限なし
         try:
-            limit = int(sys.argv[1])
+            limit = int(arg)
             if limit <= 0:
                 print("エラー: 処理本数は1以上の整数を指定してください。")
                 sys.exit(1)
+            return limit
         except ValueError:
-            print(f"エラー: 引数は整数で指定してください（例: python organize.py 5）")
+            print("エラー: 引数は整数か 'all' を指定してください。")
+            print("  例: python organize.py      # 20本（デフォルト）")
+            print("  例: python organize.py 5    # 5本だけ")
+            print("  例: python organize.py all  # 全件")
             sys.exit(1)
-    return limit
+    return DEFAULT_DAILY_LIMIT
 
 
 if __name__ == "__main__":
