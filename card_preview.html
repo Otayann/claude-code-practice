@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>名刺プレビュー - タクヤ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --yellow: #FFD60A;
+    --yellow-soft: #FFF2A8;
+    --white: #FFFFFF;
+    --black: #1A1A1A;
+    --orange: #FF6B35;
+    --gray-bg: #f0f0f0;
+    --card-w: 91mm;
+    --card-h: 55mm;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Noto Sans JP', sans-serif;
+    background: var(--gray-bg);
+    color: var(--black);
+  }
+
+  .page {
+    min-height: 100vh;
+    padding: 40px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 8px;
+  }
+  .header h1 {
+    font-size: 20px;
+    font-weight: 900;
+    margin: 0;
+    letter-spacing: 0.05em;
+  }
+  .header p {
+    font-size: 12px;
+    color: #666;
+    margin: 4px 0 0;
+  }
+
+  .card-label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    color: #666;
+    text-transform: uppercase;
+  }
+
+  .card {
+    width: var(--card-w);
+    height: var(--card-h);
+    background: var(--white);
+    border-radius: 8px;
+    box-shadow:
+      0 2px 4px rgba(0,0,0,0.08),
+      0 10px 24px rgba(0,0,0,0.18);
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* ============ 表面 ============ */
+  .front {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    padding: 2.5mm 3mm;
+    gap: 1.5mm;
+  }
+
+  .catchcopy {
+    background: var(--black);
+    color: var(--yellow);
+    font-weight: 900;
+    font-size: 3.2mm;
+    padding: 1.2mm 2mm;
+    border-radius: 4px;
+    text-align: center;
+    letter-spacing: 0.02em;
+    line-height: 1.2;
+    box-shadow: 0 0.5mm 0 var(--orange);
+  }
+
+  .profile-row {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 2.5mm;
+    align-items: center;
+  }
+
+  .photo {
+    width: 18mm;
+    height: 18mm;
+    border-radius: 50%;
+    background: var(--yellow-soft);
+    border: 0.6mm solid var(--black);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 3mm;
+    color: var(--black);
+    letter-spacing: 0.15em;
+    flex-shrink: 0;
+  }
+
+  .name-block {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    line-height: 1;
+  }
+  .name-jp {
+    font-size: 7mm;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    color: var(--black);
+  }
+  .name-en {
+    font-size: 2.8mm;
+    font-weight: 700;
+    color: #555;
+    margin-top: 1mm;
+    letter-spacing: 0.1em;
+  }
+  .name-tag {
+    display: inline-block;
+    font-size: 2.2mm;
+    font-weight: 700;
+    background: var(--yellow);
+    color: var(--black);
+    padding: 0.4mm 1.2mm;
+    border-radius: 2px;
+    margin-top: 1mm;
+    width: fit-content;
+  }
+
+  .qr-row {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 2.5mm;
+    align-items: center;
+  }
+
+  .qr-box {
+    width: 18mm;
+    height: 18mm;
+    background: var(--white);
+    border: 0.8mm solid var(--yellow);
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 2.4mm;
+    color: var(--black);
+    position: relative;
+    box-shadow: 0 0 0 0.3mm var(--black) inset;
+  }
+  .qr-box::before {
+    content: '';
+    position: absolute;
+    inset: 1.2mm;
+    background:
+      linear-gradient(45deg, var(--black) 25%, transparent 25%) 0 0/2mm 2mm,
+      linear-gradient(-45deg, var(--black) 25%, transparent 25%) 0 0/2mm 2mm;
+    opacity: 0.15;
+  }
+  .qr-box span {
+    position: relative;
+    z-index: 1;
+    background: var(--white);
+    padding: 0.3mm 0.8mm;
+    border: 0.2mm solid var(--black);
+  }
+
+  .qr-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8mm;
+  }
+  .qr-cta {
+    font-size: 3mm;
+    font-weight: 900;
+    color: var(--black);
+    line-height: 1.25;
+  }
+  .qr-cta .highlight {
+    background: var(--yellow);
+    padding: 0 0.5mm;
+  }
+  .qr-youtube {
+    display: flex;
+    align-items: center;
+    gap: 1.2mm;
+    font-size: 2.4mm;
+    font-weight: 700;
+  }
+  .yt-logo {
+    width: 5mm;
+    height: 3.5mm;
+    background: #FF0000;
+    border-radius: 1mm;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .yt-logo::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-40%, -50%);
+    border-left: 1.2mm solid var(--white);
+    border-top: 0.8mm solid transparent;
+    border-bottom: 0.8mm solid transparent;
+  }
+
+  /* 表面の装飾 */
+  .front::before {
+    content: '';
+    position: absolute;
+    top: -10mm;
+    right: -10mm;
+    width: 25mm;
+    height: 25mm;
+    background: var(--yellow);
+    border-radius: 50%;
+    opacity: 0.35;
+    z-index: 0;
+  }
+  .front > * { position: relative; z-index: 1; }
+
+  /* ============ 裏面 ============ */
+  .back {
+    padding: 3mm 3.5mm;
+    display: grid;
+    grid-template-rows: auto 1fr auto auto;
+    gap: 1.5mm;
+    background:
+      linear-gradient(135deg, var(--white) 0%, var(--white) 60%, var(--yellow-soft) 100%);
+  }
+
+  .back-title {
+    font-size: 3.6mm;
+    font-weight: 900;
+    text-align: center;
+    color: var(--black);
+    letter-spacing: 0.03em;
+    line-height: 1.2;
+  }
+  .back-title .accent {
+    color: var(--orange);
+  }
+  .back-title .bar {
+    display: inline-block;
+    background: var(--yellow);
+    padding: 0.3mm 1mm;
+    border-radius: 2px;
+  }
+
+  .map-wrap {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 2mm;
+    align-items: center;
+  }
+
+  .map-svg {
+    width: 100%;
+    height: auto;
+    max-height: 22mm;
+    display: block;
+  }
+
+  .map-legend {
+    font-size: 2.2mm;
+    line-height: 1.5;
+    font-weight: 700;
+  }
+  .map-legend .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 1mm;
+    margin-bottom: 0.6mm;
+  }
+  .legend-dot {
+    width: 2.4mm;
+    height: 2.4mm;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .legend-dot.yellow { background: var(--yellow); border: 0.3mm solid var(--black); }
+  .legend-dot.star {
+    background: transparent;
+    color: var(--orange);
+    text-align: center;
+    font-size: 3mm;
+    line-height: 1;
+  }
+
+  .fields {
+    display: flex;
+    flex-direction: column;
+    gap: 1mm;
+    font-size: 2.4mm;
+    font-weight: 700;
+  }
+  .field {
+    display: flex;
+    align-items: baseline;
+    gap: 1mm;
+  }
+  .field-label { flex-shrink: 0; }
+  .field-line {
+    flex: 1;
+    border-bottom: 0.3mm dashed var(--black);
+    height: 3mm;
+  }
+
+  .sns-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1mm;
+    padding-top: 1mm;
+    border-top: 0.3mm solid #ddd;
+  }
+  .sns-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4mm;
+    text-align: center;
+  }
+  .sns-icon {
+    width: 5mm;
+    height: 5mm;
+    border-radius: 1.2mm;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--white);
+    font-weight: 900;
+    font-size: 2.6mm;
+  }
+  .sns-tiktok { background: var(--black); }
+  .sns-x { background: var(--black); }
+  .sns-ig {
+    background: linear-gradient(135deg, #f9ce34 0%, #ee2a7b 50%, #6228d7 100%);
+  }
+  .sns-yt { background: #FF0000; }
+
+  .sns-handle {
+    font-size: 1.6mm;
+    font-weight: 700;
+    color: var(--black);
+    letter-spacing: 0;
+    word-break: break-all;
+    line-height: 1.1;
+  }
+  .sns-name {
+    font-size: 1.5mm;
+    font-weight: 700;
+    color: #666;
+  }
+
+  /* カードのホバーで少し浮かせる */
+  .card {
+    transition: transform .2s ease, box-shadow .2s ease;
+  }
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 4px 8px rgba(0,0,0,0.1),
+      0 14px 32px rgba(0,0,0,0.22);
+  }
+
+  .note {
+    max-width: 420px;
+    font-size: 12px;
+    color: #555;
+    line-height: 1.6;
+    background: var(--white);
+    padding: 12px 16px;
+    border-radius: 8px;
+    border-left: 4px solid var(--yellow);
+    margin-top: 16px;
+  }
+  .note strong { color: var(--black); }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <h1>名刺デザインプレビュー</h1>
+    <p>91mm × 55mm / Canva本制作前の完成イメージ確認用</p>
+  </div>
+
+  <!-- ================= 表面 ================= -->
+  <div class="card-label">FRONT / 表面</div>
+  <div class="card front">
+    <div class="catchcopy">36歳・無職、日本一周はじめました。</div>
+
+    <div class="profile-row">
+      <div class="photo">PHOTO</div>
+      <div class="name-block">
+        <div class="name-jp">タクヤ</div>
+        <div class="name-en">Taku</div>
+        <div class="name-tag">姫路 → 日本一周中</div>
+      </div>
+    </div>
+
+    <div class="qr-row">
+      <div class="qr-box"><span>QR CODE</span></div>
+      <div class="qr-text">
+        <div class="qr-cta">YouTube<br><span class="highlight">チャンネル登録</span>お願いします！</div>
+        <div class="qr-youtube">
+          <span class="yt-logo"></span>
+          <span>@ZERO_TO_HERO_TAKU</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= 裏面 ================= -->
+  <div class="card-label">BACK / 裏面</div>
+  <div class="card back">
+    <div class="back-title">
+      人生逆転<span class="accent">：</span><span class="bar">ゼロから挑む日本横断</span>
+    </div>
+
+    <div class="map-wrap">
+      <!-- 簡易日本地図 SVG -->
+      <svg class="map-svg" viewBox="0 0 200 110" xmlns="http://www.w3.org/2000/svg">
+        <!-- 西日本ハイライト（九州・中国・四国・関西） -->
+        <g>
+          <!-- 九州 -->
+          <path d="M28,78 Q22,70 26,62 Q32,56 42,58 Q48,62 50,70 Q52,80 46,86 Q38,92 32,88 Z"
+                fill="#FFD60A" stroke="#1A1A1A" stroke-width="1" stroke-linejoin="round"/>
+          <!-- 四国 -->
+          <path d="M58,72 Q60,68 70,68 Q80,68 82,72 Q80,78 72,80 Q62,80 58,76 Z"
+                fill="#FFD60A" stroke="#1A1A1A" stroke-width="1" stroke-linejoin="round"/>
+          <!-- 中国・関西（西日本本州） -->
+          <path d="M50,58 Q58,54 72,54 Q90,52 100,58 Q108,62 106,68 Q96,72 80,70 Q64,68 52,66 Z"
+                fill="#FFD60A" stroke="#1A1A1A" stroke-width="1" stroke-linejoin="round"/>
+        </g>
+        <!-- 東日本（通常色） -->
+        <g>
+          <!-- 中部〜関東 -->
+          <path d="M100,58 Q114,50 128,48 Q142,50 148,54 Q146,62 138,64 Q124,66 112,64 Q104,62 100,58 Z"
+                fill="#FFFFFF" stroke="#1A1A1A" stroke-width="1" stroke-linejoin="round"/>
+          <!-- 東北 -->
+          <path d="M140,48 Q148,40 154,30 Q160,22 158,14 Q152,10 146,16 Q140,28 138,40 Q138,46 140,48 Z"
+                fill="#FFFFFF" stroke="#1A1A1A" stroke-width="1" stroke-linejoin="round"/>
+          <!-- 北海道 -->
+          <path d="M150,12 Q160,4 174,6 Q184,12 182,22 Q176,30 164,28 Q154,24 150,18 Z"
+                fill="#FFFFFF" stroke="#1A1A1A" stroke-width="1" stroke-linejoin="round"/>
+        </g>
+        <!-- 姫路の★マーク -->
+        <g transform="translate(78,62)">
+          <circle r="5" fill="#FF6B35" stroke="#1A1A1A" stroke-width="0.8"/>
+          <text x="0" y="2" text-anchor="middle" font-size="6" font-weight="900" fill="#FFFFFF">★</text>
+        </g>
+        <text x="78" y="78" text-anchor="middle" font-size="5" font-weight="900" fill="#1A1A1A">姫路</text>
+        <text x="78" y="84" text-anchor="middle" font-size="4" font-weight="700" fill="#1A1A1A">START</text>
+
+        <!-- 矢印 -->
+        <path d="M70,60 Q50,50 36,68" stroke="#FF6B35" stroke-width="1.2" fill="none" stroke-dasharray="2 2"/>
+      </svg>
+
+      <div class="map-legend">
+        <div class="legend-item">
+          <span class="legend-dot star">★</span>
+          <span>姫路（出発地）</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot yellow"></span>
+          <span>攻略予定エリア</span>
+        </div>
+        <div style="font-size:2mm;font-weight:700;color:#444;margin-top:1mm;">
+          西日本から<br>スタート！
+        </div>
+      </div>
+    </div>
+
+    <div class="fields">
+      <div class="field">
+        <span class="field-label">📍 出会った場所：</span>
+        <span class="field-line"></span>
+      </div>
+      <div class="field">
+        <span class="field-label">📅 出会った日：</span>
+        <span class="field-line"></span>
+      </div>
+    </div>
+
+    <div class="sns-row">
+      <div class="sns-item">
+        <div class="sns-icon sns-tiktok">♪</div>
+        <div class="sns-name">TikTok</div>
+        <div class="sns-handle">@acrossjapan_taku</div>
+      </div>
+      <div class="sns-item">
+        <div class="sns-icon sns-x">𝕏</div>
+        <div class="sns-name">X</div>
+        <div class="sns-handle">@ZerotoHeroTaku</div>
+      </div>
+      <div class="sns-item">
+        <div class="sns-icon sns-ig">◉</div>
+        <div class="sns-name">Instagram</div>
+        <div class="sns-handle">@zero_to_hero_taku</div>
+      </div>
+      <div class="sns-item">
+        <div class="sns-icon sns-yt">▶</div>
+        <div class="sns-name">YouTube(海外)</div>
+        <div class="sns-handle">@AcrossJapan_Taku</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note">
+    <strong>📝 プレビュー用：</strong>QRコード部分・プロフィール写真はプレースホルダーです。
+    実際のサイズ（91mm × 55mm）で表示されています。印刷時の見た目を確認してください。
+  </div>
+</div>
+</body>
+</html>
